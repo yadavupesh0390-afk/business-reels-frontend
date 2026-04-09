@@ -147,6 +147,13 @@ video, iframe{
 .caption{
   margin-top:10px;
 }
+  video::-webkit-media-controls-download-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  overflow: hidden;
+  }
 </style>
 </head>
 
@@ -250,7 +257,13 @@ async function loadReels(){
       let id = r.videoUrl.split("/").pop().split("?")[0];
       content = `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen></iframe>`;
     } else {
-      content = `<video src="${r.videoUrl}" autoplay loop muted></video>`;
+      content = `<video 
+  src="${r.videoUrl}" 
+  autoplay 
+  loop 
+  muted 
+  playsinline
+></video>`;
     }
 
     div.innerHTML = `
