@@ -3,112 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Business Reels App</title>
+<title>Reels</title>
+
+<!-- ICONS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
 <style>
-body {
-  margin: 0;
-  background: black;
-  font-family: Arial;
-  color: white;
+body{
+  margin:0;
+  background:black;
+  font-family:Arial;
+  color:white;
 }
 
 /* LOGIN */
-#auth {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+#auth{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
-input {
-  margin: 5px;
-  padding: 10px;
-  width: 80%;
-  border-radius: 20px;
-  border: none;
+
+input{
+  margin:5px;
+  padding:10px;
+  width:80%;
+  border-radius:20px;
+  border:none;
 }
-button {
-  padding: 10px;
-  margin: 5px;
-  border: none;
-  border-radius: 20px;
-  background: #ff004f;
-  color: white;
+
+button{
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:20px;
+  background:#ff004f;
+  color:white;
 }
 
 /* APP */
-#app { display: none; }
-
-/* CATEGORY */
-.categories {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px;
-  background: black;
-}
-.categories button {
-  background: #222;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-}
-.active { background: #ff004f !important; }
+#app{display:none;}
 
 /* REELS */
-#reels {
-  margin-top: 60px;
-  height: 100vh;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-}
-.video-container {
-  height: 100vh;
-  position: relative;
-  scroll-snap-align: start;
-}
-video, iframe {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+#reels{
+  height:100vh;
+  overflow-y:scroll;
+  scroll-snap-type:y mandatory;
 }
 
-/* ACTIONS */
-.actions {
-  position: absolute;
-  right: 10px;
-  bottom: 120px;
-}
-.actions div {
-  margin: 10px;
-  text-align: center;
+.video-container{
+  height:100vh;
+  position:relative;
+  scroll-snap-align:start;
 }
 
-/* BOTTOM */
-.bottom-info {
-  position: absolute;
-  bottom: 20px;
-  left: 10px;
+video, iframe{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
-.profile {
-  display: flex;
-  align-items: center;
+
+/* RIGHT ICONS */
+.actions{
+  position:absolute;
+  right:10px;
+  bottom:120px;
+  text-align:center;
 }
-.profile img {
-  width: 40px;
-  border-radius: 50%;
+
+.actions i{
+  font-size:26px;
+  margin:15px 0;
+  cursor:pointer;
 }
-.follow {
-  margin-left: 10px;
-  background: #ff004f;
-  padding: 5px 10px;
-  border-radius: 20px;
+
+/* BOTTOM TEXT */
+.bottom{
+  position:absolute;
+  bottom:70px;
+  left:10px;
+}
+
+.follow{
+  border:1px solid white;
+  padding:5px 10px;
+  border-radius:20px;
+  margin-left:10px;
+}
+
+/* NAVBAR */
+.nav{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+  background:black;
+  border-top:1px solid #333;
+}
+
+.nav i{
+  font-size:22px;
 }
 </style>
 </head>
+
 <body>
 
 <!-- LOGIN -->
@@ -123,127 +124,108 @@ video, iframe {
 
 <!-- APP -->
 <div id="app">
-  <button onclick="logout()">Logout</button>
-  <div class="categories" id="categoryBar"></div>
   <div id="reels"></div>
+
+  <!-- Bottom Navbar -->
+  <div class="nav">
+    <i class="fa-solid fa-house"></i>
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <i class="fa-solid fa-plus"></i>
+    <i class="fa-solid fa-video"></i>
+    <i class="fa-solid fa-user"></i>
+  </div>
 </div>
 
 <script>
+
 const API = "https://business-reels-backend.onrender.com";
 
 // AUTO LOGIN
 if(localStorage.getItem("token")){
   document.getElementById("auth").style.display="none";
   document.getElementById("app").style.display="block";
-  loadReels("all");
+  loadReels();
 }
 
 // REGISTER
 async function register(){
-  try {
-    const emailVal = document.getElementById("email").value;
-    const passwordVal = document.getElementById("password").value;
-    const cityVal = document.getElementById("city").value;
+  const res = await fetch(API+"/auth/register",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:email.value,
+      password:password.value,
+      city:city.value
+    })
+  });
 
-    const res = await fetch(`${API}/auth/register`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email: emailVal, password: passwordVal, city: cityVal })
-    });
-    const data = await res.json();
-    alert("Registered Successfully ✅");
-    console.log(data);
-  } catch (err) {
-    console.log(err);
-    alert("Register error ❌");
-  }
+  const data = await res.json();
+  alert("Registered ✅");
 }
 
 // LOGIN
 async function login(){
-  try {
-    const emailVal = document.getElementById("email").value;
-    const passwordVal = document.getElementById("password").value;
+  const res = await fetch(API+"/auth/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:email.value,
+      password:password.value
+    })
+  });
 
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email: emailVal, password: passwordVal })
-    });
-    const data = await res.json();
-    console.log("Login response:", data);
-    if(data.error){ alert(data.error); return; }
-    if(!data.token){ alert("Login failed ❌"); return; }
+  const data = await res.json();
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("city", data.city.trim());
-    alert("Login Success ✅");
-    location.reload();
-  } catch (err) {
-    console.log(err);
-    alert("Server error ❌");
+  if(data.error){
+    alert(data.error);
+    return;
   }
-}
 
-// LOGOUT
-function logout(){
-  localStorage.clear();
+  localStorage.setItem("token",data.token);
+  localStorage.setItem("city",data.city.trim());
+
   location.reload();
 }
 
-// CATEGORY
-const categories=["all","education","shop","service","tech"];
-const bar=document.getElementById("categoryBar");
-categories.forEach(cat=>{
-  let btn=document.createElement("button");
-  btn.innerText=cat;
-  btn.onclick=()=>{
-    document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    loadReels(cat);
-  };
-  bar.appendChild(btn);
-});
-
 // LOAD REELS
-async function loadReels(category){
-  let city=localStorage.getItem("city") || "";
-  city = city.trim(); // remove spaces
+async function loadReels(){
 
-  const res = await fetch(`${API}/reels?category=${category}&city=${city}`);
+  let city = localStorage.getItem("city") || "";
+
+  const res = await fetch(`${API}/reels?city=${city}`);
   const data = await res.json();
-  console.log("Reels data:", data);
 
-  let container=document.getElementById("reels");
+  let container = document.getElementById("reels");
   container.innerHTML="";
 
   data.forEach(r=>{
-    let div=document.createElement("div");
+
+    let div = document.createElement("div");
     div.className="video-container";
 
-    let content = "";
+    let content="";
 
-    // Check if URL is YouTube
-    if(r.videoUrl.includes("youtube.com") || r.videoUrl.includes("youtu.be")){
-      let videoId = r.videoUrl.split("/").pop().split("?")[0];
-      content = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+    // YOUTUBE SUPPORT
+    if(r.videoUrl.includes("youtube")){
+      let id = r.videoUrl.split("/").pop().split("?")[0];
+      content = `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen></iframe>`;
     } else {
       content = `<video src="${r.videoUrl}" autoplay loop muted></video>`;
     }
 
     div.innerHTML = `
       ${content}
+
       <div class="actions">
-        <div onclick="like(this)">❤️</div>
-        <div onclick="share('${r.website}')">📤</div>
+        <i class="fa-regular fa-heart" onclick="like(this)"></i>
+        <i class="fa-regular fa-comment"></i>
+        <i class="fa-solid fa-share" onclick="share('${r.website}')"></i>
       </div>
-      <div class="bottom-info">
-        <div class="profile">
-          <img src="https://i.pravatar.cc/150">
-          <b>${r.businessName}</b>
-          <span class="follow" onclick="follow(this)">Follow</span>
-        </div>
-        <a href="${r.website}" target="_blank">Visit 🌐</a>
+
+      <div class="bottom">
+        <b>${r.businessName}</b>
+        <span class="follow" onclick="follow(this)">Follow</span><br>
+        <small>${r.website}</small>
       </div>
     `;
 
@@ -253,23 +235,40 @@ async function loadReels(category){
   observeVideos();
 }
 
-// VIDEO CONTROL
+// AUTO PLAY
 function observeVideos(){
   const videos=document.querySelectorAll("video");
+
   const obs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>e.isIntersecting?e.target.play():e.target.pause());
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.play();
+      } else {
+        e.target.pause();
+      }
+    });
   });
+
   videos.forEach(v=>obs.observe(v));
 }
 
 // LIKE
-function like(el){ el.innerText="❤️ Liked"; }
+function like(el){
+  el.classList.toggle("fa-solid");
+  el.style.color="red";
+}
 
 // FOLLOW
-function follow(el){ el.innerText = el.innerText==="Follow"?"Following":"Follow"; }
+function follow(el){
+  el.innerText = el.innerText=="Follow" ? "Following" : "Follow";
+}
 
 // SHARE
-function share(link){ window.open(`https://wa.me/?text=${link}`); }
+function share(link){
+  window.open(`https://wa.me/?text=${link}`);
+}
+
 </script>
+
 </body>
 </html>
