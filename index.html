@@ -159,40 +159,72 @@ if(localStorage.getItem("token")){
 
 // REGISTER
 async function register(){
-  await fetch(API+"/auth/register",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value,
-      city:city.value
-    })
-  });
-  alert("Registered");
+  try {
+    const emailVal = document.getElementById("email").value;
+    const passwordVal = document.getElementById("password").value;
+    const cityVal = document.getElementById("city").value;
+
+    const res = await fetch(API + "/auth/register", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: emailVal,
+        password: passwordVal,
+        city: cityVal
+      })
+    });
+
+    const data = await res.json();
+
+    alert("Registered Successfully ✅");
+    console.log(data);
+
+  } catch (err) {
+    console.log(err);
+    alert("Register error ❌");
+  }
 }
 
 // LOGIN
 async function login(){
-  const res = await fetch(API+"/auth/login",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value
-    })
-  });
+  try {
+    const emailVal = document.getElementById("email").value;
+    const passwordVal = document.getElementById("password").value;
 
-  const data = await res.json();
+    const res = await fetch(API + "/auth/login", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: emailVal,
+        password: passwordVal
+      })
+    });
 
-  if(data.error){
-    alert(data.error);
-    return;
+    const data = await res.json();
+
+    console.log("Login response:", data);
+
+    if(data.error){
+      alert(data.error);
+      return;
+    }
+
+    if(!data.token){
+      alert("Login failed ❌");
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("city", data.city);
+
+    alert("Login Success ✅");
+
+    location.reload();
+
+  } catch (err) {
+    console.log(err);
+    alert("Server error ❌");
   }
-
-  localStorage.setItem("token",data.token);
-  localStorage.setItem("city",data.city);
-
-  location.reload();
 }
 
 // LOGOUT
