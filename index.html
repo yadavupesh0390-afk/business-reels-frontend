@@ -107,6 +107,46 @@ video, iframe{
 .nav i{
   font-size:22px;
 }
+  .icon-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:12px 0;
+  font-size:13px;
+}
+
+.icon-block i{
+  font-size:26px;
+}
+
+.bottom{
+  position:absolute;
+  bottom:80px;
+  left:10px;
+}
+
+.user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.user img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+
+.follow{
+  border:1px solid white;
+  padding:5px 12px;
+  border-radius:20px;
+  font-size:12px;
+}
+
+.caption{
+  margin-top:10px;
+}
 </style>
 </head>
 
@@ -214,20 +254,52 @@ async function loadReels(){
     }
 
     div.innerHTML = `
-      ${content}
+  ${content}
 
-      <div class="actions">
-        <i class="fa-regular fa-heart" onclick="like(this)"></i>
-        <i class="fa-regular fa-comment"></i>
-        <i class="fa-solid fa-share" onclick="share('${r.website}')"></i>
-      </div>
+  <!-- RIGHT SIDE ICONS -->
+  <div class="actions">
 
-      <div class="bottom">
-        <b>${r.businessName}</b>
-        <span class="follow" onclick="follow(this)">Follow</span><br>
-        <small>${r.website}</small>
-      </div>
-    `;
+    <div class="icon-block">
+      <i class="fa-regular fa-heart" onclick="like(this)"></i>
+      <span>1.2K</span>
+    </div>
+
+    <div class="icon-block">
+      <i class="fa-regular fa-comment"></i>
+      <span>493</span>
+    </div>
+
+    <div class="icon-block">
+      <i class="fa-solid fa-share"></i>
+      <span>11K</span>
+    </div>
+
+    <div class="icon-block">
+      <i class="fa-regular fa-bookmark"></i>
+    </div>
+
+    <div class="icon-block">
+      <i class="fa-solid fa-ellipsis"></i>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM SECTION -->
+  <div class="bottom">
+
+    <div class="user">
+      <img src="https://i.pravatar.cc/150">
+      <b>${r.businessName}</b>
+      <span class="follow" onclick="follow(this)">Follow</span>
+    </div>
+
+    <div class="caption">
+      <p>${r.businessName}</p>
+      <small>${r.website}</small>
+    </div>
+
+  </div>
+`;
 
     container.appendChild(div);
   });
