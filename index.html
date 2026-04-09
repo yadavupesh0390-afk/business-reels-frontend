@@ -5,123 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Business Reels App</title>
 <style>
-body {
-  margin: 0;
-  background: black;
-  font-family: Arial;
-  color: white;
-}
-
-/* LOGIN */
-#auth {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
-input {
-  margin: 5px;
-  padding: 10px;
-  width: 80%;
-  border-radius: 20px;
-  border: none;
-}
-
-button {
-  padding: 10px;
-  margin: 5px;
-  border: none;
-  border-radius: 20px;
-  background: #ff004f;
-  color: white;
-}
-
-/* APP */
-#app { display: none; }
-
-/* CATEGORY */
-.categories {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px;
-  background: black;
-}
-
-.categories button {
-  background: #222;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-}
-
-.active { background: #ff004f !important; }
-
-/* REELS */
-#reels {
-  margin-top: 60px;
-  height: 100vh;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-}
-
-.video-container {
-  height: 100vh;
-  position: relative;
-  scroll-snap-align: start;
-}
-
-video, iframe {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* ACTIONS */
-.actions {
-  position: absolute;
-  right: 10px;
-  bottom: 120px;
-}
-
-.actions div {
-  margin: 10px;
-  text-align: center;
-}
-
-/* BOTTOM */
-.bottom-info {
-  position: absolute;
-  bottom: 20px;
-  left: 10px;
-}
-
-.profile {
-  display: flex;
-  align-items: center;
-}
-
-.profile img {
-  width: 40px;
-  border-radius: 50%;
-}
-
-.follow {
-  margin-left: 10px;
-  background: #ff004f;
-  padding: 5px 10px;
-  border-radius: 20px;
-}
+body { margin:0; background:black; color:white; font-family:Arial; }
+#auth { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
+input { margin:5px; padding:10px; width:80%; border-radius:20px; border:none; }
+button { padding:10px; margin:5px; border:none; border-radius:20px; background:#ff004f; color:white; cursor:pointer; }
+#app { display:none; }
+.categories { position:fixed; top:0; width:100%; display:flex; overflow-x:auto; gap:10px; padding:10px; background:black; }
+.categories button { background:#222; color:white; padding:6px 12px; border-radius:20px; }
+.active { background:#ff004f !important; }
+#reels { margin-top:60px; height:100vh; overflow-y:scroll; scroll-snap-type:y mandatory; }
+.video-container { height:100vh; position:relative; scroll-snap-align:start; }
+video, iframe { width:100%; height:100%; object-fit:cover; }
+.actions { position:absolute; right:10px; bottom:120px; }
+.actions div { margin:10px; text-align:center; }
+.bottom-info { position:absolute; bottom:20px; left:10px; }
+.profile { display:flex; align-items:center; }
+.profile img { width:40px; border-radius:50%; }
+.follow { margin-left:10px; background:#ff004f; padding:5px 10px; border-radius:20px; }
 </style>
 </head>
 <body>
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="auth">
   <h2>Login</h2>
   <input id="email" placeholder="Email">
@@ -131,7 +36,7 @@ video, iframe {
   <button onclick="login()">Login</button>
 </div>
 
-<!-- 🎬 APP -->
+<!-- APP -->
 <div id="app">
   <button onclick="logout()">Logout</button>
   <div class="categories" id="categoryBar"></div>
@@ -151,40 +56,30 @@ if(localStorage.getItem("token")){
 // REGISTER
 async function register(){
   try {
-    const emailVal = document.getElementById("email").value;
-    const passwordVal = document.getElementById("password").value;
-    const cityVal = document.getElementById("city").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const city = document.getElementById("city").value;
 
-    const res = await fetch(API + "/auth/register", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email: emailVal, password: passwordVal, city: cityVal })
+    const res = await fetch(`${API}/auth/register`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ email, password, city })
     });
-
     const data = await res.json();
     alert("Registered Successfully ✅");
-    console.log(data);
-
-  } catch (err) {
-    console.log(err);
-    alert("Register error ❌");
-  }
+  } catch(err){ console.log(err); alert("Register error ❌"); }
 }
 
 // LOGIN
 async function login(){
   try {
-    const emailVal = document.getElementById("email").value;
-    const passwordVal = document.getElementById("password").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-    const res = await fetch(API + "/auth/login", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email: emailVal, password: passwordVal })
+    const res = await fetch(`${API}/auth/login`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ email, password })
     });
-
     const data = await res.json();
-    console.log("Login response:", data);
 
     if(data.error){ alert(data.error); return; }
     if(!data.token){ alert("Login failed ❌"); return; }
@@ -193,55 +88,41 @@ async function login(){
     localStorage.setItem("city", data.city);
     alert("Login Success ✅");
     location.reload();
-
-  } catch (err) {
-    console.log(err);
-    alert("Server error ❌");
-  }
+  } catch(err){ console.log(err); alert("Server error ❌"); }
 }
 
 // LOGOUT
-function logout(){
-  localStorage.clear();
-  location.reload();
-}
+function logout(){ localStorage.clear(); location.reload(); }
 
-// CATEGORY
+// CATEGORY BAR
 const categories=["all","education","shop","service","tech"];
 const bar=document.getElementById("categoryBar");
 categories.forEach(cat=>{
   let btn=document.createElement("button");
   btn.innerText=cat;
-  btn.onclick=()=>{
-    document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    loadReels(cat);
-  };
+  btn.onclick=()=>{ document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); loadReels(cat); };
   bar.appendChild(btn);
 });
 
 // LOAD REELS
 async function loadReels(category){
-  let city=localStorage.getItem("city");
+  let city = localStorage.getItem("city") || "";
   const res = await fetch(`${API}/reels?category=${category}&city=${city}`);
   const data = await res.json();
 
-  let container=document.getElementById("reels");
+  let container = document.getElementById("reels");
   container.innerHTML="";
 
   data.forEach(r=>{
     let div=document.createElement("div");
     div.className="video-container";
 
-    let content = "";
-
-    // MP4 or YouTube Shorts check
+    let content="";
+    // Check YouTube vs MP4
     if(r.videoUrl.includes("youtube.com") || r.videoUrl.includes("youtu.be")){
-      let videoId = r.videoUrl.split("/").pop().split("?")[0];
-      content = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
-    } else {
-      content = `<video src="${r.videoUrl}" autoplay loop muted></video>`;
-    }
+      let id = r.videoUrl.split("/").pop().split("?")[0];
+      content = `<iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe>`;
+    } else { content = `<video src="${r.videoUrl}" autoplay loop muted playsinline></video>`; }
 
     div.innerHTML = `
       ${content}
@@ -258,30 +139,23 @@ async function loadReels(category){
         <a href="${r.website}" target="_blank">Visit 🌐</a>
       </div>
     `;
-
     container.appendChild(div);
   });
-
   observeVideos();
 }
 
 // VIDEO CONTROL
 function observeVideos(){
-  const videos=document.querySelectorAll("video");
-  const obs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>e.isIntersecting?e.target.play():e.target.pause());
-  });
+  const videos = document.querySelectorAll("video");
+  const obs = new IntersectionObserver(entries=>{ entries.forEach(e=>e.isIntersecting?e.target.play():e.target.pause()); });
   videos.forEach(v=>obs.observe(v));
 }
 
-// LIKE
+// LIKE / FOLLOW / SHARE
 function like(el){ el.innerText="❤️ Liked"; }
-
-// FOLLOW
 function follow(el){ el.innerText = el.innerText==="Follow"?"Following":"Follow"; }
-
-// SHARE
 function share(link){ window.open(`https://wa.me/?text=${link}`); }
 </script>
+
 </body>
 </html>
