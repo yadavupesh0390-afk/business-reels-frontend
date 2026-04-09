@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Reels Pro</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  font-family: Arial;
+  overflow: hidden;
+  color: white;
+}
+
+/* CATEGORY BAR */
+.categories {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(0,0,0,0.9);
+  z-index: 100;
+}
+
+.categories button {
+  background: #222;
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.categories .active {
+  background: #ff004f;
+}
+
+/* REELS */
+#reels {
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  margin-top: 60px;
+}
+
+.video-container {
+  height: 100vh;
+  position: relative;
+  scroll-snap-align: start;
+}
+
+video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ACTIONS */
+.actions {
+  position: absolute;
+  right: 10px;
+  bottom: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.actions div {
+  text-align: center;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* BOTTOM */
+.bottom-info {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.follow {
+  background: #ff004f;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+}
+
+/* LIKE ANIMATION */
+.heart {
+  position: absolute;
+  top: 40%;
+  left: 40%;
+  font-size: 80px;
+  opacity: 0;
+  transform: scale(0);
+  transition: 0.3s;
+}
+
+.heart.show {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="categories" id="categoryBar"></div>
+<div id="reels"></div>
+
+<script>
+
+const categories = ["All","Education","Shop","Service","Tech","Fitness"];
+
+const reelsData = [
+{
+videoUrl:"https://www.w3schools.com/html/mov_bbb.mp4",
+businessName:"Sharma Electronics",
+profilePic:"https://i.pravatar.cc/150?img=3",
+website:"https://example.com",
+category:"shop",
+views:1200
+},
+{
+videoUrl:"https://www.w3schools.com/html/movie.mp4",
+businessName:"Tech Solutions",
+profilePic:"https://i.pravatar.cc/150?img=5",
+website:"https://google.com",
+category:"tech",
+views:3200
+}
+];
+
+// CATEGORY UI
+const bar = document.getElementById("categoryBar");
+
+categories.forEach((cat,i)=>{
+let btn=document.createElement("button");
+btn.innerText=cat;
+if(i==0) btn.classList.add("active");
+
+btn.onclick=()=>{
+document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+loadReels(cat.toLowerCase());
+};
+bar.appendChild(btn);
+});
+
+// LOAD REELS
+function loadReels(category){
+let container=document.getElementById("reels");
+container.innerHTML="";
+
+let filtered = category==="all"?reelsData:reelsData.filter(r=>r.category===category);
+
+filtered.forEach(reel=>{
+let div=document.createElement("div");
+div.className="video-container";
+
+div.innerHTML=`
+<video src="${reel.videoUrl}" loop playsinline></video>
+
+<div class="heart">❤️</div>
+
+<div class="actions">
+<div onclick="like(this)">❤️<br>0</div>
+<div>💬</div>
+<div onclick="share('${reel.website}')">📤</div>
+</div>
+
+<div class="bottom-info">
+<div class="profile">
+<img src="${reel.profilePic}">
+<strong>${reel.businessName} ✔️</strong>
+<span class="follow">Follow</span>
+</div>
+
+<p>${reel.views} views</p>
+
+<a class="visit-btn" href="${reel.website}" target="_blank">
+Visit Website 🌐
+</a>
+</div>
+`;
+
+container.appendChild(div);
+});
+
+observeVideos();
+}
+
+// AUTO PLAY
+function observeVideos(){
+let videos=document.querySelectorAll("video");
+
+let observer=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting) e.target.play();
+else e.target.pause();
+});
+},{threshold:0.7});
+
+videos.forEach(v=>observer.observe(v));
+}
+
+// LIKE BUTTON
+function like(el){
+let count=parseInt(el.innerText.replace("❤️",""))||0;
+count++;
+el.innerHTML=`❤️<br>${count}`;
+}
+
+// DOUBLE TAP LIKE
+document.addEventListener("dblclick",function(e){
+if(e.target.tagName==="VIDEO"){
+let heart=e.target.parentElement.querySelector(".heart");
+heart.classList.add("show");
+setTimeout(()=>heart.classList.remove("show"),500);
+}
+});
+
+// SHARE
+function share(link){
+window.open(`https://wa.me/?text=${link}`);
+}
+
+// PLAY/PAUSE
+document.addEventListener("click",function(e){
+if(e.target.tagName==="VIDEO"){
+e.target.paused?e.target.play():e.target.pause();
+}
+});
+
+// DEFAULT
+loadReels("all");
+
+</script>
+
+</body>
+</html>
