@@ -49,6 +49,13 @@ button{
   height:100vh;
   overflow-y:scroll;
   scroll-snap-type:y mandatory;
+  scroll-behavior:smooth;
+}
+
+/* LOADER */
+#loader{
+  text-align:center;
+  padding:20px;
 }
 
 .video-container{
@@ -100,16 +107,15 @@ video, iframe{
   border-radius:50%;
 }
 
-/* WHATSAPP BUTTON */
+/* WHATSAPP */
 .whatsapp-btn{
   background:#25D366;
   padding:6px 10px;
   border-radius:20px;
-  font-size:14px;
   cursor:pointer;
 }
 
-/* CLICKABLE WEBSITE */
+/* WEBSITE */
 .website-link{
   display:block;
   color:#00ffff;
@@ -155,6 +161,7 @@ video::-webkit-media-controls-download-button{
 
 <!-- APP -->
 <div id="app">
+  <div id="loader">Loading Reels...</div>
   <div id="reels"></div>
 
   <div class="nav">
@@ -210,14 +217,14 @@ async function login(){
 
   localStorage.setItem("token",data.token);
   localStorage.setItem("city",data.city.trim());
-
   location.reload();
 }
 
 // LOAD REELS
 async function loadReels(){
-  let city = localStorage.getItem("city") || "";
+  document.getElementById("loader").style.display="block";
 
+  let city = localStorage.getItem("city") || "";
   const res = await fetch(`${API}/reels?city=${city}`);
   const data = await res.json();
 
@@ -228,6 +235,7 @@ async function loadReels(){
 
     let div = document.createElement("div");
     div.className="video-container";
+    div.ondblclick = ()=>likeDouble(div);
 
     let content = "";
 
@@ -236,14 +244,10 @@ async function loadReels(){
         ? r.videoUrl.split("/").pop().split("?")[0]
         : new URL(r.videoUrl).searchParams.get("v");
 
-      content = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}" allowfullscreen></iframe>`;
-    }
-    else if(r.videoUrl.includes("drive.google.com")){
-      let id = r.videoUrl.split("/d/")[1]?.split("/")[0];
-      content = `<iframe src="https://drive.google.com/file/d/${id}/preview"></iframe>`;
+      content = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}"></iframe>`;
     }
     else{
-      content = `<video src="${r.videoUrl}" autoplay loop muted playsinline></video>`;
+      content = `<video src="${r.videoUrl}" autoplay loop muted playsinline controlsList="nodownload" disablePictureInPicture></video>`;
     }
 
     div.innerHTML = `
@@ -282,40 +286,69 @@ async function loadReels(){
     container.appendChild(div);
   });
 
+  document.getElementById("loader").style.display="none";
   observeVideos();
 }
 
 // AUTO PLAY
 function observeVideos(){
-  const videos=document.querySelectorAll("video");
+  const containers = document.querySelectorAll(".video-container");
 
-  const obs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      e.isIntersecting ? e.target.play() : e.target.pause();
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      const video = entry.target.querySelector("video");
+
+      if(video){
+        if(entry.isIntersecting){
+          video.play();
+        } else {
+          video.pause();
+        }
+      }
     });
-  });
+  }, { threshold: 0.8 });
 
-  videos.forEach(v=>obs.observe(v));
+  containers.forEach(c=>obs.observe(c));
 }
 
-// LIKE
+// LIKE CLICK
 function like(el){
   el.classList.toggle("fa-solid");
   el.style.color="red";
 }
 
-// SHARE
-function share(link){
-  window.open(`https://wa.me/?text=${link}`);
+// DOUBLE TAP ❤️
+function likeDouble(el){
+  let heart = document.createElement("i");
+  heart.className = "fa-solid fa-heart";
+  heart.style.position = "absolute";
+  heart.style.top = "50%";
+  heart.style.left = "50%";
+  heart.style.transform = "translate(-50%, -50%)";
+  heart.style.fontSize = "80px";
+  heart.style.color = "red";
+
+  el.appendChild(heart);
+  setTimeout(()=>heart.remove(),1000);
 }
 
-// WHATSAPP OPEN
+// SHARE
+function share(link){
+  if(navigator.share){
+    navigator.share({title:"Check this", url:link});
+  }else{
+    window.open(`https://wa.me/?text=${link}`);
+  }
+}
+
+// WHATSAPP
 function openWhatsApp(number){
   if(!number){
     alert("No WhatsApp number");
     return;
   }
-  window.open(`https://wa.me/${number}`);
+  const msg = encodeURIComponent("Hi, I saw your reel 🔥");
+  window.open(`https://wa.me/${number}?text=${msg}`);
 }
 </script>
 
