@@ -247,8 +247,7 @@ async function loadReels(){
       content = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}"></iframe>`;
     }
     else{
-      content = `<video src="${r.videoUrl}" autoplay loop muted playsinline controlsList="nodownload" disablePictureInPicture></video>`;
-    }
+      content = `<video src="${r.videoUrl}" autoplay loop playsinline controlsList="nodownload" disablePictureInPicture></video>`;    }
 
     div.innerHTML = `
       ${content}
