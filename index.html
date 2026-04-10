@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reels</title>
 
-<!-- ICONS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
@@ -69,56 +68,21 @@ video, iframe{
   position:absolute;
   right:10px;
   bottom:120px;
-  text-align:center;
 }
 
-.actions i{
-  font-size:26px;
-  margin:15px 0;
-  cursor:pointer;
-}
-
-/* BOTTOM TEXT */
-.bottom{
-  position:absolute;
-  bottom:70px;
-  left:10px;
-}
-
-.follow{
-  border:1px solid white;
-  padding:5px 10px;
-  border-radius:20px;
-  margin-left:10px;
-}
-
-/* NAVBAR */
-.nav{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  padding:10px;
-  background:black;
-  border-top:1px solid #333;
-}
-
-.nav i{
-  font-size:22px;
-}
-  .icon-block{
+.icon-block{
   display:flex;
   flex-direction:column;
   align-items:center;
   margin:12px 0;
-  font-size:13px;
 }
 
 .icon-block i{
   font-size:26px;
+  cursor:pointer;
 }
 
+/* BOTTOM */
 .bottom{
   position:absolute;
   bottom:80px;
@@ -133,7 +97,6 @@ video, iframe{
 
 .user img{
   width:40px;
-  height:40px;
   border-radius:50%;
 }
 
@@ -144,16 +107,25 @@ video, iframe{
   font-size:12px;
 }
 
-.caption{
-  margin-top:10px;
-}
-  video::-webkit-media-controls-download-button {
-  display: none !important;
+.nav{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+  background:black;
+  border-top:1px solid #333;
 }
 
-video::-webkit-media-controls-enclosure {
-  overflow: hidden;
-  }
+.nav i{
+  font-size:22px;
+}
+
+/* REMOVE DOWNLOAD */
+video::-webkit-media-controls-download-button{
+  display:none !important;
+}
 </style>
 </head>
 
@@ -173,7 +145,6 @@ video::-webkit-media-controls-enclosure {
 <div id="app">
   <div id="reels"></div>
 
-  <!-- Bottom Navbar -->
   <div class="nav">
     <i class="fa-solid fa-house"></i>
     <i class="fa-solid fa-magnifying-glass"></i>
@@ -184,7 +155,6 @@ video::-webkit-media-controls-enclosure {
 </div>
 
 <script>
-
 const API = "https://business-reels-backend.onrender.com";
 
 // AUTO LOGIN
@@ -196,7 +166,7 @@ if(localStorage.getItem("token")){
 
 // REGISTER
 async function register(){
-  const res = await fetch(API+"/auth/register",{
+  await fetch(API+"/auth/register",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -205,8 +175,6 @@ async function register(){
       city:city.value
     })
   });
-
-  const data = await res.json();
   alert("Registered ✅");
 }
 
@@ -236,7 +204,6 @@ async function login(){
 
 // LOAD REELS
 async function loadReels(){
-
   let city = localStorage.getItem("city") || "";
 
   const res = await fetch(`${API}/reels?city=${city}`);
@@ -250,65 +217,54 @@ async function loadReels(){
     let div = document.createElement("div");
     div.className="video-container";
 
-    let content="";
+    let content = "";
 
-    // YOUTUBE SUPPORT
-    if(r.videoUrl.includes("youtube")){
-      let id = r.videoUrl.split("/").pop().split("?")[0];
-      content = `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen></iframe>`;
-    } else {
-      content = `<video 
-  src="${r.videoUrl}" 
-  autoplay 
-  loop 
-  muted 
-  playsinline
-></video>`;
+    // YOUTUBE
+    if(r.videoUrl.includes("youtube") || r.videoUrl.includes("youtu.be")){
+      let id = r.videoUrl.includes("youtu.be") 
+        ? r.videoUrl.split("/").pop().split("?")[0]
+        : new URL(r.videoUrl).searchParams.get("v");
+
+      content = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}" allowfullscreen></iframe>`;
+    }
+
+    // GOOGLE DRIVE
+    else if(r.videoUrl.includes("drive.google.com")){
+      let id = r.videoUrl.split("/d/")[1]?.split("/")[0];
+      content = `<iframe src="https://drive.google.com/file/d/${id}/preview"></iframe>`;
+    }
+
+    // VIDEO
+    else{
+      content = `<video src="${r.videoUrl}" autoplay loop muted playsinline></video>`;
     }
 
     div.innerHTML = `
-  ${content}
+      ${content}
 
-  <!-- RIGHT SIDE ICONS -->
-  <div class="actions">
+      <div class="actions">
+        <div class="icon-block">
+          <i class="fa-regular fa-heart" onclick="like(this)"></i>
+        </div>
 
-  <div class="icon-block">
-    <i class="fa-regular fa-heart" onclick="like(this)"></i>
-    <span>1.2K</span>
-  </div>
+        <div class="icon-block">
+          <i class="fa-regular fa-comment"></i>
+        </div>
 
-  <div class="icon-block">
-    <i class="fa-regular fa-comment"></i>
-    <span>493</span>
-  </div>
+        <div class="icon-block">
+          <i class="fa-solid fa-share" onclick="share('${r.website}')"></i>
+        </div>
+      </div>
 
-  <div class="icon-block">
-    <i class="fa-solid fa-share"></i>
-    <span>11K</span>
-  </div>
-
-  <div class="icon-block">
-    <i class="fa-solid fa-ellipsis"></i>
-  </div>
-
-</div>
-
-  <!-- BOTTOM SECTION -->
-  <div class="bottom">
-
-    <div class="user">
-      <img src="https://i.pravatar.cc/150">
-      <b>${r.businessName}</b>
-      <span class="follow" onclick="follow(this)">Follow</span>
-    </div>
-
-    <div class="caption">
-      <p>${r.businessName}</p>
-      <small>${r.website}</small>
-    </div>
-
-  </div>
-`;
+      <div class="bottom">
+        <div class="user">
+          <img src="https://i.pravatar.cc/150">
+          <b>${r.businessName}</b>
+          <span class="follow" onclick="follow(this)">Follow</span>
+        </div>
+        <small>${r.website || ""}</small>
+      </div>
+    `;
 
     container.appendChild(div);
   });
@@ -322,11 +278,7 @@ function observeVideos(){
 
   const obs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{
-      if(e.isIntersecting){
-        e.target.play();
-      } else {
-        e.target.pause();
-      }
+      e.isIntersecting ? e.target.play() : e.target.pause();
     });
   });
 
@@ -348,7 +300,6 @@ function follow(el){
 function share(link){
   window.open(`https://wa.me/?text=${link}`);
 }
-
 </script>
 
 </body>
