@@ -100,13 +100,25 @@ video, iframe{
   border-radius:50%;
 }
 
-.follow{
-  border:1px solid white;
-  padding:5px 12px;
+/* WHATSAPP BUTTON */
+.whatsapp-btn{
+  background:#25D366;
+  padding:6px 10px;
   border-radius:20px;
-  font-size:12px;
+  font-size:14px;
+  cursor:pointer;
 }
 
+/* CLICKABLE WEBSITE */
+.website-link{
+  display:block;
+  color:#00ffff;
+  margin-top:5px;
+  text-decoration:none;
+  font-size:13px;
+}
+
+/* NAV */
 .nav{
   position:fixed;
   bottom:0;
@@ -219,7 +231,6 @@ async function loadReels(){
 
     let content = "";
 
-    // YOUTUBE
     if(r.videoUrl.includes("youtube") || r.videoUrl.includes("youtu.be")){
       let id = r.videoUrl.includes("youtu.be") 
         ? r.videoUrl.split("/").pop().split("?")[0]
@@ -227,14 +238,10 @@ async function loadReels(){
 
       content = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}" allowfullscreen></iframe>`;
     }
-
-    // GOOGLE DRIVE
     else if(r.videoUrl.includes("drive.google.com")){
       let id = r.videoUrl.split("/d/")[1]?.split("/")[0];
       content = `<iframe src="https://drive.google.com/file/d/${id}/preview"></iframe>`;
     }
-
-    // VIDEO
     else{
       content = `<video src="${r.videoUrl}" autoplay loop muted playsinline></video>`;
     }
@@ -260,9 +267,15 @@ async function loadReels(){
         <div class="user">
           <img src="https://i.pravatar.cc/150">
           <b>${r.businessName}</b>
-          <span class="follow" onclick="follow(this)">Follow</span>
+
+          <span class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
+            <i class="fa-brands fa-whatsapp"></i>
+          </span>
         </div>
-        <small>${r.website || ""}</small>
+
+        <a href="${r.website}" target="_blank" class="website-link">
+          ${r.website}
+        </a>
       </div>
     `;
 
@@ -291,14 +304,18 @@ function like(el){
   el.style.color="red";
 }
 
-// FOLLOW
-function follow(el){
-  el.innerText = el.innerText=="Follow" ? "Following" : "Follow";
-}
-
 // SHARE
 function share(link){
   window.open(`https://wa.me/?text=${link}`);
+}
+
+// WHATSAPP OPEN
+function openWhatsApp(number){
+  if(!number){
+    alert("No WhatsApp number");
+    return;
+  }
+  window.open(`https://wa.me/${number}`);
 }
 </script>
 
