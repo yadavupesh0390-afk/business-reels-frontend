@@ -208,14 +208,14 @@ async function loadReels(){
   let container = document.getElementById("reels");
   container.innerHTML="";
 
-  data.forEach(r=>{
+  data.forEach((r, index)=>{
 
     let div = document.createElement("div");
     div.className="video-container";
     div.ondblclick = ()=>likeDouble(div);
 
     div.innerHTML = `
-      <video src="${r.videoUrl}" autoplay loop playsinline></video>
+      <video src="${r.videoUrl}" autoplay muted loop playsinline preload="auto"></video>
 
       <div class="actions">
         <div class="icon-block">
@@ -230,12 +230,10 @@ async function loadReels(){
       <div class="bottom">
         <b>${r.businessName}</b>
 
-        <!-- WEBSITE -->
         <a href="${r.website}" target="_blank" class="website-link">
           ${r.website ? r.website : "No Website"}
         </a>
 
-        <!-- WHATSAPP -->
         <div class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
           <i class="fa-brands fa-whatsapp"></i>
         </div>
@@ -246,7 +244,16 @@ async function loadReels(){
   });
 
   document.getElementById("loader").style.display="none";
+
   observeVideos();
+
+  // ✅ 🔥 FIRST VIDEO FORCE PLAY
+  setTimeout(()=>{
+    const firstVideo = document.querySelector("video");
+    if(firstVideo){
+      firstVideo.play().catch(()=>{});
+    }
+  }, 200);
 }
 
 /* ================= AUTO PLAY ================= */
@@ -256,12 +263,12 @@ function observeVideos(){
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
       if(entry.isIntersecting){
-        entry.target.play();
+        entry.target.play().catch(()=>{});
       } else {
         entry.target.pause();
       }
     });
-  }, { threshold: 0.8 });
+  }, { threshold: 0.5 }); // 🔥 FIXED
 
   videos.forEach(v=>obs.observe(v));
 }
