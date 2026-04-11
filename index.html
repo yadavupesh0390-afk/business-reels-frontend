@@ -65,7 +65,6 @@ video{
   object-fit:cover;
 }
 
-/* RIGHT SIDE ICONS */
 .actions{
   position:absolute;
   right:10px;
@@ -84,7 +83,6 @@ video{
   cursor:pointer;
 }
 
-/* BOTTOM INFO */
 .bottom{
   position:absolute;
   bottom:80px;
@@ -92,7 +90,6 @@ video{
   right:10px;
 }
 
-/* WHATSAPP BUTTON */
 .whatsapp-btn{
   background:#25D366;
   width:45px;
@@ -106,7 +103,6 @@ video{
   margin-top:8px;
 }
 
-/* WEBSITE */
 .website-link{
   display:block;
   margin-top:5px;
@@ -120,7 +116,6 @@ video{
 
 <body>
 
-<!-- LOGIN -->
 <div id="auth">
   <h2>Login</h2>
   <input id="email" placeholder="Email">
@@ -128,7 +123,6 @@ video{
   <button onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
 <div id="app">
   <div id="loader">📍 Getting Location...</div>
   <div id="reels"></div>
@@ -139,14 +133,12 @@ const API = "https://business-reels-backend.onrender.com";
 
 let userLat = null;
 let userLng = null;
-
-// 🔥 GLOBAL SOUND CONTROL
 let soundEnabled = false;
 
 /* ================= AUTO LOGIN ================= */
 if(localStorage.getItem("token")){
-  document.getElementById("auth").style.display="none";
-  document.getElementById("app").style.display="block";
+  auth.style.display="none";
+  app.style.display="block";
   startApp();
 }
 
@@ -174,76 +166,65 @@ async function login(){
 
 /* ================= START ================= */
 async function startApp(){
-  await getLocation();
-  loadReels();
+  getLocation(); // 🔥 don't wait
+  loadReels();   // 🔥 fast load
 }
 
 /* ================= LOCATION ================= */
 function getLocation(){
-  return new Promise((resolve)=>{
 
-    if(!navigator.geolocation){
-      document.getElementById("loader").innerText = "⚠️ Location not supported";
-      return resolve();
+  if(!navigator.geolocation) return;
+
+  let updated = false;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+
+      console.log("📍 LOCATION:", userLat, userLng);
+
+      // 🔥 reload reels if location comes later
+      if(!updated){
+        updated = true;
+        showLoader("📍 Updating nearby reels...");
+        loadReels();
+      }
+
+    },
+    (err)=>{
+      console.log("Location error:", err.message);
+    },
+    {
+      enableHighAccuracy:true,
+      timeout:600,
+      maximumAge:0
     }
+  );
 
-    let done = false;
-
-    // ⏱ TIMEOUT (5 sec)
-    const timeout = setTimeout(()=>{
-      if(!done){
-        console.log("⏱ Location timeout");
-        document.getElementById("loader").innerText = "⚠️ Loading without location...";
-        done = true;
-        resolve();
-      }
-    }, 5000);
-
-    navigator.geolocation.getCurrentPosition(
-      (pos)=>{
-        if(done) return;
-
-        clearTimeout(timeout);
-
-        userLat = pos.coords.latitude;
-        userLng = pos.coords.longitude;
-
-        console.log("📍 LOCATION:", userLat, userLng);
-
-        document.getElementById("loader").innerText="Loading Reels...";
-        done = true;
-        resolve();
-      },
-      (err)=>{
-        if(done) return;
-
-        clearTimeout(timeout);
-
-        console.log("❌ Location error:", err.message);
-
-        document.getElementById("loader").innerText="⚠️ Location denied, loading reels...";
-        done = true;
-        resolve();
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
-  });
+  // ⏱ fallback loader change
+  setTimeout(()=>{
+    showLoader("Loading Reels...");
+  },3000);
 }
 
 /* ================= LOAD REELS ================= */
 async function loadReels(){
 
-  const res = await fetch(`${API}/reels?lat=${userLat}&lng=${userLng}`);
+  let url = `${API}/reels`;
+
+  if(userLat && userLng){
+    url += `?lat=${userLat}&lng=${userLng}`;
+  }
+
+  const res = await fetch(url);
   const data = await res.json();
 
   let container = document.getElementById("reels");
   container.innerHTML="";
 
-  data.forEach((r, index)=>{
+  data.forEach((r)=>{
 
     let div = document.createElement("div");
     div.className="video-container";
@@ -274,11 +255,10 @@ async function loadReels(){
       </div>
     `;
 
-    // 🔥 TAP EVENT (ONLY FIRST TIME ENABLE SOUND)
     const video = div.querySelector("video");
 
+    // 🔥 FIRST TAP ENABLE SOUND
     div.addEventListener("click", () => {
-
       if(!soundEnabled){
         soundEnabled = true;
 
@@ -289,26 +269,25 @@ async function loadReels(){
 
         video.play().catch(()=>{});
       }
-
     });
 
     container.appendChild(div);
   });
 
-  document.getElementById("loader").style.display="none";
+  hideLoader();
 
   observeVideos();
 
-  // FIRST VIDEO FORCE PLAY
+  // 🔥 first video play
   setTimeout(()=>{
     const firstVideo = document.querySelector("video");
     if(firstVideo){
       firstVideo.play().catch(()=>{});
     }
-  }, 200);
+  },200);
 }
 
-/* ================= AUTO PLAY ================= */
+/* ================= OBSERVER ================= */
 function observeVideos(){
   const videos = document.querySelectorAll("video");
 
@@ -318,13 +297,7 @@ function observeVideos(){
 
       if(entry.isIntersecting){
 
-        // 🔥 SOUND CONTROL
-        if(soundEnabled){
-          video.muted = false;
-        } else {
-          video.muted = true;
-        }
-
+        video.muted = !soundEnabled;
         video.play().catch(()=>{});
 
       } else {
@@ -334,6 +307,16 @@ function observeVideos(){
   }, { threshold: 0.6 });
 
   videos.forEach(v=>obs.observe(v));
+}
+
+/* ================= LOADER ================= */
+function showLoader(text){
+  loader.style.display="block";
+  loader.innerText=text;
+}
+
+function hideLoader(){
+  loader.style.display="none";
 }
 
 /* ================= LIKE ================= */
@@ -350,10 +333,7 @@ function share(link){
 
 /* ================= WHATSAPP ================= */
 function openWhatsApp(number){
-  if(!number){
-    alert("No WhatsApp number");
-    return;
-  }
+  if(!number) return;
   const msg = encodeURIComponent("Hi, I saw your reel 🔥");
   window.open(`https://wa.me/${number}?text=${msg}`);
 }
