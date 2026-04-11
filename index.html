@@ -15,7 +15,6 @@ body{
   color:white;
 }
 
-/* LOGIN */
 #auth{
   display:flex;
   flex-direction:column;
@@ -41,18 +40,14 @@ button{
   color:white;
 }
 
-/* APP */
 #app{display:none;}
 
-/* REELS */
 #reels{
   height:100vh;
   overflow-y:scroll;
   scroll-snap-type:y mandatory;
-  scroll-behavior:smooth;
 }
 
-/* LOADER */
 #loader{
   text-align:center;
   padding:20px;
@@ -64,13 +59,12 @@ button{
   scroll-snap-align:start;
 }
 
-video, iframe{
+video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-/* RIGHT ICONS */
 .actions{
   position:absolute;
   right:10px;
@@ -84,65 +78,17 @@ video, iframe{
   margin:12px 0;
 }
 
-.icon-block i{
-  font-size:26px;
-  cursor:pointer;
-}
-
-/* BOTTOM */
 .bottom{
   position:absolute;
   bottom:80px;
   left:10px;
 }
 
-.user{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.user img{
-  width:40px;
-  border-radius:50%;
-}
-
-/* WHATSAPP */
 .whatsapp-btn{
   background:#25D366;
   padding:6px 10px;
   border-radius:20px;
   cursor:pointer;
-}
-
-/* WEBSITE */
-.website-link{
-  display:block;
-  color:#00ffff;
-  margin-top:5px;
-  text-decoration:none;
-  font-size:13px;
-}
-
-/* NAV */
-.nav{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  padding:10px;
-  background:black;
-  border-top:1px solid #333;
-}
-
-.nav i{
-  font-size:22px;
-}
-
-/* REMOVE DOWNLOAD */
-video::-webkit-media-controls-download-button{
-  display:none !important;
 }
 </style>
 </head>
@@ -154,50 +100,29 @@ video::-webkit-media-controls-download-button{
   <h2>Login</h2>
   <input id="email" placeholder="Email">
   <input id="password" placeholder="Password" type="password">
-  <input id="city" placeholder="City">
-  <button onclick="register()">Register</button>
   <button onclick="login()">Login</button>
 </div>
 
 <!-- APP -->
 <div id="app">
-  <div id="loader">Loading Reels...</div>
+  <div id="loader">📍 Getting Location...</div>
   <div id="reels"></div>
-
-  <div class="nav">
-    <i class="fa-solid fa-house"></i>
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <i class="fa-solid fa-plus"></i>
-    <i class="fa-solid fa-video"></i>
-    <i class="fa-solid fa-user"></i>
-  </div>
 </div>
 
 <script>
 const API = "https://business-reels-backend.onrender.com";
 
-// AUTO LOGIN
+let userLat = null;
+let userLng = null;
+
+/* ================= AUTO LOGIN ================= */
 if(localStorage.getItem("token")){
   document.getElementById("auth").style.display="none";
   document.getElementById("app").style.display="block";
-  loadReels();
+  startApp();
 }
 
-// REGISTER
-async function register(){
-  await fetch(API+"/auth/register",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value,
-      city:city.value
-    })
-  });
-  alert("Registered ✅");
-}
-
-// LOGIN
+/* ================= LOGIN ================= */
 async function login(){
   const res = await fetch(API+"/auth/login",{
     method:"POST",
@@ -216,16 +141,43 @@ async function login(){
   }
 
   localStorage.setItem("token",data.token);
-  localStorage.setItem("city",data.city.trim());
   location.reload();
 }
 
-// LOAD REELS
-async function loadReels(){
-  document.getElementById("loader").style.display="block";
+/* ================= START ================= */
+async function startApp(){
+  await getLocation();
+  loadReels();
+}
 
-  let city = localStorage.getItem("city") || "";
-  const res = await fetch(`${API}/reels?city=${city}`);
+/* ================= GET LOCATION ================= */
+function getLocation(){
+  return new Promise((resolve)=>{
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        (pos)=>{
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+
+          console.log("📍 LOCATION:", userLat, userLng);
+          document.getElementById("loader").innerText="Loading Reels...";
+          resolve();
+        },
+        ()=>{
+          document.getElementById("loader").innerText="❌ Location denied";
+          resolve();
+        }
+      );
+    } else {
+      resolve();
+    }
+  });
+}
+
+/* ================= LOAD REELS ================= */
+async function loadReels(){
+
+  const res = await fetch(`${API}/reels?lat=${userLat}&lng=${userLng}`);
   const data = await res.json();
 
   let container = document.getElementById("reels");
@@ -237,28 +189,12 @@ async function loadReels(){
     div.className="video-container";
     div.ondblclick = ()=>likeDouble(div);
 
-    let content = "";
-
-    if(r.videoUrl.includes("youtube") || r.videoUrl.includes("youtu.be")){
-      let id = r.videoUrl.includes("youtu.be") 
-        ? r.videoUrl.split("/").pop().split("?")[0]
-        : new URL(r.videoUrl).searchParams.get("v");
-
-      content = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}"></iframe>`;
-    }
-    else{
-      content = `<video src="${r.videoUrl}" autoplay loop playsinline controlsList="nodownload" disablePictureInPicture></video>`;    }
-
     div.innerHTML = `
-      ${content}
+      <video src="${r.videoUrl}" autoplay loop playsinline></video>
 
       <div class="actions">
         <div class="icon-block">
           <i class="fa-regular fa-heart" onclick="like(this)"></i>
-        </div>
-
-        <div class="icon-block">
-          <i class="fa-regular fa-comment"></i>
         </div>
 
         <div class="icon-block">
@@ -267,18 +203,11 @@ async function loadReels(){
       </div>
 
       <div class="bottom">
-        <div class="user">
-          <img src="https://i.pravatar.cc/150">
-          <b>${r.businessName}</b>
+        <b>${r.businessName}</b>
 
-          <span class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
-            <i class="fa-brands fa-whatsapp"></i>
-          </span>
+        <div class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
+          <i class="fa-brands fa-whatsapp"></i>
         </div>
-
-        <a href="${r.website}" target="_blank" class="website-link">
-          ${r.website}
-        </a>
       </div>
     `;
 
@@ -289,66 +218,53 @@ async function loadReels(){
   observeVideos();
 }
 
-// AUTO PLAY
+/* ================= AUTO PLAY ================= */
 function observeVideos(){
-  const containers = document.querySelectorAll(".video-container");
+  const videos = document.querySelectorAll("video");
 
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
-      const video = entry.target.querySelector("video");
-
-      if(video){
-        if(entry.isIntersecting){
-          video.play();
-        } else {
-          video.pause();
-        }
+      if(entry.isIntersecting){
+        entry.target.play();
+      } else {
+        entry.target.pause();
       }
     });
   }, { threshold: 0.8 });
 
-  containers.forEach(c=>obs.observe(c));
+  videos.forEach(v=>obs.observe(v));
 }
 
-// LIKE CLICK
+/* ================= LIKE ================= */
 function like(el){
   el.classList.toggle("fa-solid");
   el.style.color="red";
 }
 
-// DOUBLE TAP ❤️
+/* ================= DOUBLE TAP ================= */
 function likeDouble(el){
-  let heart = document.createElement("i");
-  heart.className = "fa-solid fa-heart";
-  heart.style.position = "absolute";
-  heart.style.top = "50%";
-  heart.style.left = "50%";
-  heart.style.transform = "translate(-50%, -50%)";
-  heart.style.fontSize = "80px";
-  heart.style.color = "red";
+  let heart = document.createElement("div");
+  heart.innerHTML="❤️";
+  heart.style.position="absolute";
+  heart.style.top="50%";
+  heart.style.left="50%";
+  heart.style.transform="translate(-50%,-50%)";
+  heart.style.fontSize="80px";
 
   el.appendChild(heart);
   setTimeout(()=>heart.remove(),1000);
 }
 
-// SHARE
+/* ================= SHARE ================= */
 function share(link){
-  if(navigator.share){
-    navigator.share({title:"Check this", url:link});
-  }else{
-    window.open(`https://wa.me/?text=${link}`);
-  }
+  window.open(`https://wa.me/?text=${link}`);
 }
 
-// WHATSAPP
+/* ================= WHATSAPP ================= */
 function openWhatsApp(number){
-  if(!number){
-    alert("No WhatsApp number");
-    return;
-  }
-  const msg = encodeURIComponent("Hi, I saw your reel 🔥");
-  window.open(`https://wa.me/${number}?text=${msg}`);
+  window.open(`https://wa.me/${number}`);
 }
+
 </script>
 
 </body>
