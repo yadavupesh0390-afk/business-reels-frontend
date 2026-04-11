@@ -139,6 +139,7 @@ const API = "https://business-reels-backend.onrender.com";
 
 let userLat = null;
 let userLng = null;
+let currentVideo = null;
 
 /* ================= AUTO LOGIN ================= */
 if(localStorage.getItem("token")){
@@ -175,7 +176,7 @@ async function startApp(){
   loadReels();
 }
 
-/* ================= GET LOCATION ================= */
+/* ================= LOCATION ================= */
 function getLocation(){
   return new Promise((resolve)=>{
     if(navigator.geolocation){
@@ -183,8 +184,6 @@ function getLocation(){
         (pos)=>{
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-
-          console.log("📍 LOCATION:", userLat, userLng);
           document.getElementById("loader").innerText="Loading Reels...";
           resolve();
         },
@@ -208,14 +207,21 @@ async function loadReels(){
   let container = document.getElementById("reels");
   container.innerHTML="";
 
-  data.forEach((r, index)=>{
+  data.forEach(r=>{
 
     let div = document.createElement("div");
     div.className="video-container";
     div.ondblclick = ()=>likeDouble(div);
 
     div.innerHTML = `
-      <video src="${r.videoUrl}" autoplay muted loop playsinline preload="auto"></video>
+      <video 
+        src="${r.videoUrl}" 
+        autoplay 
+        muted 
+        loop 
+        playsinline 
+        preload="auto"
+      ></video>
 
       <div class="actions">
         <div class="icon-block">
@@ -240,6 +246,23 @@ async function loadReels(){
       </div>
     `;
 
+    const video = div.querySelector("video");
+
+    // 🔥 FAST CLICK SOUND ENABLE
+    video.addEventListener("click", ()=>{
+      
+      // sab videos mute
+      document.querySelectorAll("video").forEach(v=>{
+        v.muted = true;
+      });
+
+      // current video unmute
+      video.muted = false;
+      video.play();
+
+      currentVideo = video;
+    });
+
     container.appendChild(div);
   });
 
@@ -247,13 +270,14 @@ async function loadReels(){
 
   observeVideos();
 
-  // ✅ 🔥 FIRST VIDEO FORCE PLAY
+  // FIRST VIDEO FORCE PLAY
   setTimeout(()=>{
-    const firstVideo = document.querySelector("video");
-    if(firstVideo){
-      firstVideo.play().catch(()=>{});
+    const first = document.querySelector("video");
+    if(first){
+      first.play().catch(()=>{});
+      currentVideo = first;
     }
-  }, 200);
+  }, 100);
 }
 
 /* ================= AUTO PLAY ================= */
@@ -262,13 +286,21 @@ function observeVideos(){
 
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
+      const video = entry.target;
+
       if(entry.isIntersecting){
-        entry.target.play().catch(()=>{});
+        video.play().catch(()=>{});
+
+        // scroll par mute rakho
+        if(video !== currentVideo){
+          video.muted = true;
+        }
+
       } else {
-        entry.target.pause();
+        video.pause();
       }
     });
-  }, { threshold: 0.5 }); // 🔥 FIXED
+  }, { threshold: 0.6 });
 
   videos.forEach(v=>obs.observe(v));
 }
@@ -308,7 +340,6 @@ function openWhatsApp(number){
   const msg = encodeURIComponent("Hi, I saw your reel 🔥");
   window.open(`https://wa.me/${number}?text=${msg}`);
 }
-
 </script>
 
 </body>
