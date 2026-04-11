@@ -297,11 +297,23 @@ function observeVideos(){
 
       if(entry.isIntersecting){
 
-        video.muted = !soundEnabled;
+        // ✅ RESET VIDEO
+        video.currentTime = 0;
+
+        // 🔊 SOUND CONTROL
+        if(soundEnabled){
+          video.muted = false;
+        } else {
+          video.muted = true;
+        }
+
         video.play().catch(()=>{});
 
       } else {
         video.pause();
+
+        // ✅ OPTIONAL: reset when leaving screen also
+        video.currentTime = 0;
       }
     });
   }, { threshold: 0.6 });
