@@ -181,21 +181,56 @@ async function startApp(){
 /* ================= LOCATION ================= */
 function getLocation(){
   return new Promise((resolve)=>{
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        (pos)=>{
-          userLat = pos.coords.latitude;
-          userLng = pos.coords.longitude;
-          document.getElementById("loader").innerText="Loading Reels...";
-          resolve();
-        },
-        ()=>{
-          resolve();
-        }
-      );
-    } else {
-      resolve();
+
+    if(!navigator.geolocation){
+      document.getElementById("loader").innerText = "⚠️ Location not supported";
+      return resolve();
     }
+
+    let done = false;
+
+    // ⏱ TIMEOUT (5 sec)
+    const timeout = setTimeout(()=>{
+      if(!done){
+        console.log("⏱ Location timeout");
+        document.getElementById("loader").innerText = "⚠️ Loading without location...";
+        done = true;
+        resolve();
+      }
+    }, 5000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        if(done) return;
+
+        clearTimeout(timeout);
+
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+
+        console.log("📍 LOCATION:", userLat, userLng);
+
+        document.getElementById("loader").innerText="Loading Reels...";
+        done = true;
+        resolve();
+      },
+      (err)=>{
+        if(done) return;
+
+        clearTimeout(timeout);
+
+        console.log("❌ Location error:", err.message);
+
+        document.getElementById("loader").innerText="⚠️ Location denied, loading reels...";
+        done = true;
+        resolve();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
   });
 }
 
