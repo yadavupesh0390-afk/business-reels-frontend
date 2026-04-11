@@ -139,7 +139,9 @@ const API = "https://business-reels-backend.onrender.com";
 
 let userLat = null;
 let userLng = null;
-let currentVideo = null;
+
+// 🔥 GLOBAL SOUND CONTROL
+let soundEnabled = false;
 
 /* ================= AUTO LOGIN ================= */
 if(localStorage.getItem("token")){
@@ -188,7 +190,6 @@ function getLocation(){
           resolve();
         },
         ()=>{
-          document.getElementById("loader").innerText="❌ Location denied";
           resolve();
         }
       );
@@ -207,21 +208,13 @@ async function loadReels(){
   let container = document.getElementById("reels");
   container.innerHTML="";
 
-  data.forEach(r=>{
+  data.forEach((r, index)=>{
 
     let div = document.createElement("div");
     div.className="video-container";
-    div.ondblclick = ()=>likeDouble(div);
 
     div.innerHTML = `
-      <video 
-        src="${r.videoUrl}" 
-        autoplay 
-        muted 
-        loop 
-        playsinline 
-        preload="auto"
-      ></video>
+      <video src="${r.videoUrl}" autoplay muted loop playsinline preload="auto"></video>
 
       <div class="actions">
         <div class="icon-block">
@@ -237,7 +230,7 @@ async function loadReels(){
         <b>${r.businessName}</b>
 
         <a href="${r.website}" target="_blank" class="website-link">
-          ${r.website ? r.website : "No Website"}
+          ${r.website || "No Website"}
         </a>
 
         <div class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
@@ -246,21 +239,22 @@ async function loadReels(){
       </div>
     `;
 
+    // 🔥 TAP EVENT (ONLY FIRST TIME ENABLE SOUND)
     const video = div.querySelector("video");
 
-    // 🔥 FAST CLICK SOUND ENABLE
-    video.addEventListener("click", ()=>{
-      
-      // sab videos mute
-      document.querySelectorAll("video").forEach(v=>{
-        v.muted = true;
-      });
+    div.addEventListener("click", () => {
 
-      // current video unmute
-      video.muted = false;
-      video.play();
+      if(!soundEnabled){
+        soundEnabled = true;
 
-      currentVideo = video;
+        document.querySelectorAll("video").forEach(v=>{
+          v.muted = false;
+          v.volume = 1;
+        });
+
+        video.play().catch(()=>{});
+      }
+
     });
 
     container.appendChild(div);
@@ -272,12 +266,11 @@ async function loadReels(){
 
   // FIRST VIDEO FORCE PLAY
   setTimeout(()=>{
-    const first = document.querySelector("video");
-    if(first){
-      first.play().catch(()=>{});
-      currentVideo = first;
+    const firstVideo = document.querySelector("video");
+    if(firstVideo){
+      firstVideo.play().catch(()=>{});
     }
-  }, 100);
+  }, 200);
 }
 
 /* ================= AUTO PLAY ================= */
@@ -289,12 +282,15 @@ function observeVideos(){
       const video = entry.target;
 
       if(entry.isIntersecting){
-        video.play().catch(()=>{});
 
-        // scroll par mute rakho
-        if(video !== currentVideo){
+        // 🔥 SOUND CONTROL
+        if(soundEnabled){
+          video.muted = false;
+        } else {
           video.muted = true;
         }
+
+        video.play().catch(()=>{});
 
       } else {
         video.pause();
@@ -309,20 +305,6 @@ function observeVideos(){
 function like(el){
   el.classList.toggle("fa-solid");
   el.style.color="red";
-}
-
-/* ================= DOUBLE TAP ================= */
-function likeDouble(el){
-  let heart = document.createElement("div");
-  heart.innerHTML="❤️";
-  heart.style.position="absolute";
-  heart.style.top="50%";
-  heart.style.left="50%";
-  heart.style.transform="translate(-50%,-50%)";
-  heart.style.fontSize="80px";
-
-  el.appendChild(heart);
-  setTimeout(()=>heart.remove(),1000);
 }
 
 /* ================= SHARE ================= */
