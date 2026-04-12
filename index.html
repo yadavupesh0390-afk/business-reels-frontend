@@ -65,6 +65,17 @@ video{
   object-fit:cover;
 }
 
+/* 🔊 MUTE ICON */
+.mute-icon{
+  position:absolute;
+  top:20px;
+  right:15px;
+  font-size:20px;
+  background:rgba(0,0,0,0.5);
+  padding:8px;
+  border-radius:50%;
+}
+
 .actions{
   position:absolute;
   right:10px;
@@ -76,11 +87,6 @@ video{
   flex-direction:column;
   align-items:center;
   margin:12px 0;
-}
-
-.icon-block i{
-  font-size:24px;
-  cursor:pointer;
 }
 
 .bottom{
@@ -98,18 +104,12 @@ video{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:20px;
-  cursor:pointer;
-  margin-top:8px;
 }
 
 .website-link{
   display:block;
   margin-top:5px;
   color:#00ffff;
-  font-size:14px;
-  text-decoration:none;
-  word-break:break-all;
 }
 </style>
 </head>
@@ -119,12 +119,12 @@ video{
 <div id="auth">
   <h2>Login</h2>
   <input id="email" placeholder="Email">
-  <input id="password" placeholder="Password" type="password">
+  <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
 <div id="app">
-  <div id="loader">📍 Getting Location...</div>
+  <div id="loader">Loading Reels...</div>
   <div id="reels"></div>
 </div>
 
@@ -135,14 +135,14 @@ let userLat = null;
 let userLng = null;
 let soundEnabled = false;
 
-/* ================= AUTO LOGIN ================= */
+/* AUTO LOGIN */
 if(localStorage.getItem("token")){
   auth.style.display="none";
   app.style.display="block";
   startApp();
 }
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 async function login(){
   const res = await fetch(API+"/auth/login",{
     method:"POST",
@@ -155,65 +155,39 @@ async function login(){
 
   const data = await res.json();
 
-  if(data.error){
-    alert(data.error);
-    return;
-  }
+  if(data.error) return alert(data.error);
 
   localStorage.setItem("token",data.token);
   location.reload();
 }
 
-/* ================= START ================= */
-async function startApp(){
-  getLocation(); // 🔥 don't wait
-  loadReels();   // 🔥 fast load
+/* START */
+function startApp(){
+  getLocation();
+  loadReels();
 }
 
-/* ================= LOCATION ================= */
+/* LOCATION (BACKGROUND) */
 function getLocation(){
-
   if(!navigator.geolocation) return;
-
-  let updated = false;
 
   navigator.geolocation.getCurrentPosition(
     (pos)=>{
-
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
 
-      console.log("📍 LOCATION:", userLat, userLng);
-
-      // 🔥 reload reels if location comes later
-      if(!updated){
-        updated = true;
-        showLoader("📍 Updating nearby reels...");
-        loadReels();
-      }
-
+      showLoader("📍 Updating nearby reels...");
+      loadReels();
     },
-    (err)=>{
-      console.log("Location error:", err.message);
-    },
-    {
-      enableHighAccuracy:true,
-      timeout:8000,
-      maximumAge:0
-    }
+    ()=>{},
+    { timeout:8000 }
   );
-
-  // ⏱ fallback loader change
-  setTimeout(()=>{
-    showLoader("Loading Reels...");
-  },3000);
 }
 
-/* ================= LOAD REELS ================= */
+/* LOAD REELS */
 async function loadReels(){
 
   let url = `${API}/reels`;
-
   if(userLat && userLng){
     url += `?lat=${userLat}&lng=${userLng}`;
   }
@@ -221,8 +195,7 @@ async function loadReels(){
   const res = await fetch(url);
   const data = await res.json();
 
-  let container = document.getElementById("reels");
-  container.innerHTML="";
+  reels.innerHTML = "";
 
   data.forEach((r)=>{
 
@@ -230,13 +203,13 @@ async function loadReels(){
     div.className="video-container";
 
     div.innerHTML = `
-      <video src="${r.videoUrl}" autoplay muted loop playsinline preload="auto"></video>
+      <video src="${r.videoUrl}" autoplay muted loop playsinline></video>
+      <div class="mute-icon">🔇</div>
 
       <div class="actions">
         <div class="icon-block">
           <i class="fa-regular fa-heart" onclick="like(this)"></i>
         </div>
-
         <div class="icon-block">
           <i class="fa-solid fa-share" onclick="share('${r.website}')"></i>
         </div>
@@ -244,11 +217,7 @@ async function loadReels(){
 
       <div class="bottom">
         <b>${r.businessName}</b>
-
-        <a href="${r.website}" target="_blank" class="website-link">
-          ${r.website || "No Website"}
-        </a>
-
+        <a href="${r.website}" target="_blank" class="website-link">${r.website || "No Website"}</a>
         <div class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
           <i class="fa-brands fa-whatsapp"></i>
         </div>
@@ -256,98 +225,104 @@ async function loadReels(){
     `;
 
     const video = div.querySelector("video");
+    const icon = div.querySelector(".mute-icon");
 
-    // 🔥 FIRST TAP ENABLE SOUND
-    div.addEventListener("click", () => {
+    div.addEventListener("click", ()=>{
+
+      // 🔥 FIRST CLICK SOUND ON
       if(!soundEnabled){
         soundEnabled = true;
 
         document.querySelectorAll("video").forEach(v=>{
           v.muted = false;
-          v.volume = 1;
         });
 
-        video.play().catch(()=>{});
+        document.querySelectorAll(".mute-icon").forEach(i=>{
+          i.innerText = "🔊";
+        });
+
+        video.play();
+        return;
       }
+
+      // 🔥 PLAY / PAUSE
+      if(video.paused){
+        video.play();
+      }else{
+        video.pause();
+      }
+
     });
 
-    container.appendChild(div);
+    reels.appendChild(div);
   });
 
   hideLoader();
-
   observeVideos();
 
-  // 🔥 first video play
   setTimeout(()=>{
-    const firstVideo = document.querySelector("video");
-    if(firstVideo){
-      firstVideo.play().catch(()=>{});
-    }
+    let v = document.querySelector("video");
+    if(v) v.play();
   },200);
 }
 
-/* ================= OBSERVER ================= */
+/* OBSERVER */
 function observeVideos(){
   const videos = document.querySelectorAll("video");
 
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
-      const video = entry.target;
+      let v = entry.target;
+      let icon = v.parentElement.querySelector(".mute-icon");
 
       if(entry.isIntersecting){
 
-        // ✅ RESET VIDEO
-        video.currentTime = 0;
+        v.currentTime = 0;
 
-        // 🔊 SOUND CONTROL
         if(soundEnabled){
-          video.muted = false;
-        } else {
-          video.muted = true;
+          v.muted = false;
+          icon.innerText="🔊";
+        }else{
+          v.muted = true;
+          icon.innerText="🔇";
         }
 
-        video.play().catch(()=>{});
+        v.play();
 
-      } else {
-        video.pause();
-
-        // ✅ OPTIONAL: reset when leaving screen also
-        video.currentTime = 0;
+      }else{
+        v.pause();
+        v.currentTime = 0;
       }
     });
-  }, { threshold: 0.6 });
+  },{threshold:0.6});
 
   videos.forEach(v=>obs.observe(v));
 }
 
-/* ================= LOADER ================= */
-function showLoader(text){
+/* LOADER */
+function showLoader(t){
   loader.style.display="block";
-  loader.innerText=text;
+  loader.innerText=t;
 }
-
 function hideLoader(){
   loader.style.display="none";
 }
 
-/* ================= LIKE ================= */
+/* LIKE */
 function like(el){
   el.classList.toggle("fa-solid");
   el.style.color="red";
 }
 
-/* ================= SHARE ================= */
+/* SHARE */
 function share(link){
-  if(!link) return;
-  window.open(`https://wa.me/?text=${link}`);
+  if(link) window.open(`https://wa.me/?text=${link}`);
 }
 
-/* ================= WHATSAPP ================= */
-function openWhatsApp(number){
-  if(!number) return;
-  const msg = encodeURIComponent("Hi, I saw your reel 🔥");
-  window.open(`https://wa.me/${number}?text=${msg}`);
+/* WHATSAPP */
+function openWhatsApp(num){
+  if(!num) return;
+  window.open(`https://wa.me/${num}`);
 }
 </script>
 
