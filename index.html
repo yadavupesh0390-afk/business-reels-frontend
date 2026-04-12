@@ -127,6 +127,30 @@ video{
   font-size:15px;
   text-decoration:none;
 }
+  .business-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between; /* 🔥 left name, right icon */
+}
+
+.whatsapp-small{
+  width:30px;
+  height:30px;
+  background:#25D366;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.website-link{
+  display:block;
+  margin-top:6px;
+  color:#00ffff;
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -242,12 +266,20 @@ async function loadReels(){
       </div>
 
       <div class="bottom">
-        <b>${r.businessName}</b>
-        <a href="${r.website}" target="_blank" class="website-link">${r.website || "No Website"}</a>
+  
+  <div class="business-row">
+    <b>${r.businessName}</b>
 
-        <div class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
-          <i class="fa-brands fa-whatsapp"></i>
-        </div>
+    <div class="whatsapp-small" onclick="openWhatsApp('${r.whatsapp}')">
+      <i class="fa-brands fa-whatsapp"></i>
+    </div>
+  </div>
+
+  <a href="${r.website}" target="_blank" class="website-link">
+    ${r.website || "No Website"}
+  </a>
+
+</div>
       </div>
     `;
 
