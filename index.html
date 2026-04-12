@@ -76,6 +76,7 @@ video{
   border-radius:50%;
 }
 
+/* RIGHT SIDE ICONS */
 .actions{
   position:absolute;
   right:10px;
@@ -87,8 +88,19 @@ video{
   flex-direction:column;
   align-items:center;
   margin:12px 0;
+  cursor:pointer;
 }
 
+.icon-block i{
+  font-size:26px;
+}
+
+.count{
+  font-size:14px;
+  margin-top:4px;
+}
+
+/* BOTTOM */
 .bottom{
   position:absolute;
   bottom:80px;
@@ -167,7 +179,7 @@ function startApp(){
   loadReels();
 }
 
-/* LOCATION (BACKGROUND) */
+/* LOCATION */
 function getLocation(){
   if(!navigator.geolocation) return;
 
@@ -207,17 +219,28 @@ async function loadReels(){
       <div class="mute-icon">🔇</div>
 
       <div class="actions">
-        <div class="icon-block">
-          <i class="fa-regular fa-heart" onclick="like(this)"></i>
+
+        <div class="icon-block" onclick="like(this)">
+          <i class="fa-regular fa-heart"></i>
+          <span class="count">${r.likes || 0}</span>
         </div>
+
         <div class="icon-block">
-          <i class="fa-solid fa-share" onclick="share('${r.website}')"></i>
+          <i class="fa-regular fa-comment"></i>
+          <span class="count">${r.comments || 493}</span>
         </div>
+
+        <div class="icon-block" onclick="share('${r.website}')">
+          <i class="fa-solid fa-share"></i>
+          <span class="count">${r.shares || "11.6K"}</span>
+        </div>
+
       </div>
 
       <div class="bottom">
         <b>${r.businessName}</b>
         <a href="${r.website}" target="_blank" class="website-link">${r.website || "No Website"}</a>
+
         <div class="whatsapp-btn" onclick="openWhatsApp('${r.whatsapp}')">
           <i class="fa-brands fa-whatsapp"></i>
         </div>
@@ -229,7 +252,7 @@ async function loadReels(){
 
     div.addEventListener("click", ()=>{
 
-      // 🔥 FIRST CLICK SOUND ON
+      // 🔊 FIRST CLICK SOUND ON
       if(!soundEnabled){
         soundEnabled = true;
 
@@ -245,7 +268,7 @@ async function loadReels(){
         return;
       }
 
-      // 🔥 PLAY / PAUSE
+      // ⏯ PLAY / PAUSE
       if(video.paused){
         video.play();
       }else{
@@ -310,8 +333,15 @@ function hideLoader(){
 
 /* LIKE */
 function like(el){
-  el.classList.toggle("fa-solid");
-  el.style.color="red";
+  let icon = el.querySelector("i");
+  let count = el.querySelector(".count");
+
+  icon.classList.toggle("fa-solid");
+  icon.classList.toggle("fa-regular");
+  icon.style.color="red";
+
+  let current = parseInt(count.innerText) || 0;
+  count.innerText = current + 1;
 }
 
 /* SHARE */
